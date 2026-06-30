@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SupplyDesk | Procurement Tracking</title>
+    <meta name="description" content="SupplyDesk is a bilingual procurement tracking dashboard for requests, LPOs, suppliers, payments, and annual budgets." />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="hero">
+      <nav class="topbar" aria-label="Primary navigation">
+        <a class="brand" href="#top" aria-label="SupplyDesk home">
+          <span class="brand-mark">S</span>
+          <span>SupplyDesk</span>
+        </a>
+        <div class="nav-links">
+          <a href="#screenshots">Screenshots</a>
+          <a href="#quick-start">Quick start</a>
+          <a href="https://github.com/wesker10/SupplyDesk">GitHub</a>
+        </div>
+      </nav>
+
+      <section id="top" class="hero-grid">
+        <div class="hero-copy">
+          <p class="eyebrow">Procurement operations, one clear dashboard</p>
+          <h1>Track requests, LPOs, suppliers, payments, and budgets without spreadsheet chaos.</h1>
+          <p class="lead">SupplyDesk is a bilingual web application for internal procurement teams. It combines purchase requests, payment progress, annual budget lines, archive workflows, and supplier records in a clean browser-based system.</p>
+          <div class="hero-actions">
+            <a class="button primary" href="#quick-start">Run SupplyDesk</a>
+            <a class="button secondary" href="https://github.com/wesker10/SupplyDesk">View repository</a>
+          </div>
+          <div class="facts" aria-label="Product highlights">
+            <span>React + Node.js</span>
+            <span>PostgreSQL 18</span>
+            <span>Docker ready</span>
+            <span>English + Arabic UI</span>
+          </div>
+        </div>
+        <div class="hero-shot">
+          <img src="screenshots/supplydesk-dashboard.png" alt="SupplyDesk dashboard showing a 2026 annual budget of 15,000,000 QAR with consumed and remaining balances" />
+        </div>
+      </section>
+    </header>
+
+    <main>
+      <section class="section">
+        <div class="section-heading">
+          <p class="eyebrow">What it covers</p>
+          <h2>Built for the daily procurement workflow.</h2>
+        </div>
+        <div class="feature-grid">
+          <article>
+            <h3>Request tracking</h3>
+            <p>Follow purchase requests from intake to completion with owner, supplier, expected delivery, priority, status, and LPO fields.</p>
+          </article>
+          <article>
+            <h3>Payment visibility</h3>
+            <p>Split payments into rows, monitor paid and remaining amounts, and quickly identify partially paid requests.</p>
+          </article>
+          <article>
+            <h3>Budget control</h3>
+            <p>Manage annual budget years and lines, then link requests to the right allocation for live consumed and remaining totals.</p>
+          </article>
+          <article>
+            <h3>Operational cleanup</h3>
+            <p>Archive old requests, restore deleted items, and keep supplier records and suggestions reusable.</p>
+          </article>
+        </div>
+      </section>
+
+      <section id="screenshots" class="section screenshots">
+        <div class="section-heading">
+          <p class="eyebrow">Screenshots</p>
+          <h2>A polished procurement workspace.</h2>
+        </div>
+        <div class="shot-grid">
+          <figure>
+            <img src="screenshots/supplydesk-dashboard.png" alt="SupplyDesk dashboard with 2026 annual budget, consumed balance, and remaining balance" />
+            <figcaption>Dashboard overview with 2026 annual budget, consumed balance, and remaining balance</figcaption>
+          </figure>
+          <figure>
+            <img src="screenshots/supplydesk-budget-lines.png" alt="SupplyDesk budget lines screen" />
+            <figcaption>Budget lines</figcaption>
+          </figure>
+          <figure>
+            <img src="screenshots/supplydesk-new-request.png" alt="SupplyDesk new request form" />
+            <figcaption>New request</figcaption>
+          </figure>
+          <figure>
+            <img src="screenshots/supplydesk-request-details.png" alt="SupplyDesk request details panel" />
+            <figcaption>Request details</figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <section id="quick-start" class="section quick-start">
+        <div class="section-heading">
+          <p class="eyebrow">Quick start</p>
+          <h2>Run the published Docker image.</h2>
+          <p>The default `docker-compose.yml` starts the published SupplyDesk image and PostgreSQL automatically. No separate database install is needed for production Docker installs.</p>
+        </div>
+        <div class="code-card">
+          <pre><code>curl -fsSLO https://raw.githubusercontent.com/wesker10/SupplyDesk/main/docker-compose.yml
+curl -fsSLO https://raw.githubusercontent.com/wesker10/SupplyDesk/main/.env.example
+cp .env.example .env
+docker compose up -d</code></pre>
+        </div>
+        <p class="open-url">Open <code>http://localhost:3000</code></p>
+      </section>
+
+      <section id="install-guide" class="section install-guide">
+        <div class="section-heading">
+          <p class="eyebrow">Install options</p>
+          <h2>Choose the setup that matches your use case.</h2>
+        </div>
+        <div class="install-grid">
+          <article>
+            <h3>Production Docker</h3>
+            <p>Recommended for most users. Uses the published image from GitHub Container Registry and starts PostgreSQL automatically.</p>
+            <pre><code>git clone https://github.com/wesker10/SupplyDesk.git
+cd SupplyDesk
+cp .env.example .env
+docker compose up -d</code></pre>
+          </article>
+          <article>
+            <h3>Development Docker</h3>
+            <p>Builds the app image locally from source. Use this when changing code or testing a local build.</p>
+            <pre><code>git clone https://github.com/wesker10/SupplyDesk.git
+cd SupplyDesk
+cp .env.example .env
+docker compose -f docker-compose.dev.yml up -d --build</code></pre>
+          </article>
+          <article>
+            <h3>Node.js development</h3>
+            <p>Runs the app directly with Node.js. PostgreSQL is optional for local testing; without PostgreSQL settings, the app uses SQLite fallback.</p>
+            <pre><code>npm install
+npm test
+npm run build
+npm start</code></pre>
+          </article>
+        </div>
+      </section>
+
+    </main>
+
+    <footer>
+      <span>SupplyDesk</span>
+      <a href="https://github.com/wesker10/SupplyDesk">GitHub repository</a>
+      <a href="https://github.com/wesker10/SupplyDesk/pkgs/container/supplydesk">Docker image</a>
+    </footer>
+  </body>
+</html>

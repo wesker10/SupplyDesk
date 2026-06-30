@@ -1,0 +1,34 @@
+services:
+  app:
+    image: ghcr.io/wesker10/supplydesk:latest
+    ports:
+      - "${APP_PORT:-3000}:3000"
+    environment:
+      PORT: 3000
+      PGHOST: db
+      PGPORT: 5432
+      PGDATABASE: ${POSTGRES_DB:-supplydesk}
+      PGUSER: ${POSTGRES_USER:-supplydesk}
+      PGPASSWORD: ${POSTGRES_PASSWORD:-supplydesk_change_me}
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  db:
+    image: postgres:18
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-supplydesk}
+      POSTGRES_USER: ${POSTGRES_USER:-supplydesk}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-supplydesk_change_me}
+    volumes:
+      - supplydesk_postgres_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-supplydesk} -d ${POSTGRES_DB:-supplydesk}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+volumes:
+  supplydesk_postgres_data:

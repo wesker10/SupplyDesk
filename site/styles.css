@@ -1,0 +1,98 @@
+* { box-sizing: border-box; }
+:root {
+  color-scheme: dark;
+  --bg: #101116;
+  --panel: #171922;
+  --panel-2: #202330;
+  --text: #f6f2ea;
+  --muted: #aaa6a0;
+  --line: rgba(255,255,255,.12);
+  --accent: #d9b873;
+  --accent-2: #8fd6c7;
+  --shadow: 0 24px 80px rgba(0,0,0,.38);
+}
+body {
+  margin: 0;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: radial-gradient(circle at top left, rgba(217,184,115,.18), transparent 32rem), var(--bg);
+  color: var(--text);
+}
+a { color: inherit; text-decoration: none; }
+img { display: block; max-width: 100%; }
+.hero { padding: 24px; }
+.topbar, footer {
+  max-width: 1180px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+.brand, .nav-links, footer { display: flex; align-items: center; gap: 18px; }
+.brand { font-weight: 800; letter-spacing: -.02em; }
+.brand-mark {
+  width: 38px; height: 38px; border-radius: 12px;
+  display: grid; place-items: center;
+  color: #1a1711; background: linear-gradient(135deg, #f0d990, #c99b45);
+}
+.nav-links, footer { color: var(--muted); font-size: 14px; }
+.nav-links a:hover, footer a:hover { color: var(--text); }
+.hero-grid {
+  max-width: 1180px;
+  margin: 70px auto 40px;
+  display: grid;
+  grid-template-columns: minmax(0, .9fr) minmax(320px, 1.1fr);
+  gap: 42px;
+  align-items: center;
+}
+.eyebrow {
+  color: var(--accent);
+  margin: 0 0 12px;
+  font-size: 13px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .12em;
+}
+h1, h2, h3, p { margin-top: 0; }
+h1 { font-size: clamp(42px, 6vw, 72px); line-height: .94; letter-spacing: -.07em; margin-bottom: 22px; }
+h2 { font-size: clamp(30px, 4vw, 48px); line-height: 1; letter-spacing: -.045em; margin-bottom: 12px; }
+h3 { font-size: 19px; margin-bottom: 10px; }
+.lead, .section-heading p, article p { color: var(--muted); line-height: 1.7; }
+.lead { font-size: 18px; max-width: 680px; }
+.hero-actions { display: flex; flex-wrap: wrap; gap: 14px; margin: 30px 0 20px; }
+.button { padding: 13px 18px; border-radius: 14px; font-weight: 800; border: 1px solid var(--line); }
+.button.primary { background: var(--accent); color: #1b160c; border-color: transparent; }
+.button.secondary { background: rgba(255,255,255,.05); }
+.facts { display: flex; flex-wrap: wrap; gap: 10px; color: var(--muted); font-size: 13px; }
+.facts span { border: 1px solid var(--line); background: rgba(255,255,255,.04); border-radius: 999px; padding: 8px 11px; }
+.hero-shot, figure, .code-card, article {
+  border: 1px solid var(--line);
+  background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.035));
+  border-radius: 28px;
+  box-shadow: var(--shadow);
+}
+.hero-shot { padding: 10px; transform: rotate(1deg); }
+.hero-shot img, figure img { border-radius: 20px; border: 1px solid rgba(255,255,255,.12); }
+.section { max-width: 1180px; margin: 0 auto; padding: 74px 24px; }
+.section-heading { max-width: 720px; margin-bottom: 28px; }
+.feature-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+article { padding: 22px; box-shadow: none; }
+.shot-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; }
+figure { margin: 0; padding: 10px; }
+figcaption { color: var(--muted); padding: 13px 8px 4px; font-weight: 700; }
+.quick-start { padding-bottom: 96px; }
+.code-card { padding: 22px; overflow: auto; background: #0b0d12; }
+pre { margin: 0; white-space: pre-wrap; line-height: 1.7; color: #e9e2d5; }
+code { font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace; }
+.open-url { color: var(--muted); margin-top: 14px; }
+footer { border-top: 1px solid var(--line); padding: 28px 24px 44px; margin-top: 20px; }
+@media (max-width: 900px) {
+  .hero-grid, .feature-grid, .shot-grid { grid-template-columns: 1fr; }
+  .topbar { align-items: flex-start; }
+  .nav-links { flex-wrap: wrap; justify-content: flex-end; }
+}
+
+.install-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.install-grid article { overflow: auto; }
+.install-grid pre { margin-top: 16px; font-size: 13px; }
+@media (max-width: 900px) { .install-grid { grid-template-columns: 1fr; } }

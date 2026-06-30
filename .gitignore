@@ -1,0 +1,32 @@
+# dependencies
+node_modules/
+
+# build output
+dist/
+build/
+.next/
+
+# environment and secrets
+.env
+.env.*
+!.env.example
+secrets/
+*.pem
+*.key
+
+# runtime data and backups
+data/
+backups/
+*.sqlite
+*.db
+*.dump
+*.tar
+*.tar.gz
+
+# logs and OS/editor files
+logs/
+*.log
+npm-debug.log*
+.DS_Store
+.vscode/
+.idea/
