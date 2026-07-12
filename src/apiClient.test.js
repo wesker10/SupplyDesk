@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { archiveOrderApi, addPaymentApi, createOrderApi, createSupplierApi, deleteOrderForeverApi, deletePaymentApi, fetchOrdersApi, fetchSettingsApi, fetchSuppliersApi, restoreOrderApi, trashOrderApi, updateOrderApi, updatePaymentApi, updateSettingsApi, updateSupplierApi } from './apiClient.js'
+import { archiveOrderApi, addPaymentApi, createOrderApi, createSupplierApi, deleteOrderForeverApi, deletePaymentApi, deleteSupplierApi, fetchOrdersApi, fetchSettingsApi, fetchSuppliersApi, restoreOrderApi, trashOrderApi, updateOrderApi, updatePaymentApi, updateSettingsApi, updateSupplierApi, sendTestEmailApi } from './apiClient.js'
 
 describe('Talabati API client', () => {
   it('loads orders from the shared API', async () => {
@@ -18,7 +18,7 @@ describe('Talabati API client', () => {
       json: async () => ({ order: { id: 'REQ-2', title: 'طلب جديد' } }),
     })
 
-    await expect(createOrderApi({ title: 'طلب جديد' }, fetchImpl)).resolves.toEqual({ id: 'REQ-2', title: 'طلب جديد' })
+    await expect(createOrderApi({ title: 'طلب جديد' }, fetchImpl)).resolves.toEqual({ order: { id: 'REQ-2', title: 'طلب جديد' }, emailNotification: undefined })
     expect(fetchImpl).toHaveBeenCalledWith('/api/orders', expect.objectContaining({ method: 'POST' }))
   })
 

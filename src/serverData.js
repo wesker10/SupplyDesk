@@ -346,6 +346,9 @@ const defaultSettings = {
   hiddenSuggestions: '{}',
   currencyCode: 'QAR',
   currencySymbol: 'ر.ق',
+  emailNotificationsEnabled: 'false',
+  emailRecipient: '',
+  emailTheme: 'talabati',
 }
 
 function seedDefaultSettings(db) {
@@ -507,6 +510,13 @@ export function updateSupplierRecord(db, supplierId, patch = {}) {
   const current = getSupplierRecord(db, supplierId)
   if (!current) return null
   return replaceSupplier(db, normalizeSupplier(patch, current))
+}
+
+export function deleteSupplierRecord(db, supplierId) {
+  const current = getSupplierRecord(db, supplierId)
+  if (!current) return false
+  db.prepare('DELETE FROM suppliers WHERE id = ?').run(supplierId)
+  return true
 }
 
 

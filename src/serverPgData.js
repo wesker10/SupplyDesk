@@ -13,6 +13,9 @@ const defaultSettings = {
   hiddenSuggestions: '{}',
   currencyCode: 'QAR',
   currencySymbol: 'ر.ق',
+  emailNotificationsEnabled: 'false',
+  emailRecipient: '',
+  emailTheme: 'talabati',
 }
 
 function yearFromDate(value) {
@@ -210,6 +213,7 @@ export async function listSupplierRecords(db) { const orderList = await listOrde
 export async function getSupplierRecord(db, id) { return deserializeSupplier(await one(db, 'SELECT * FROM suppliers WHERE id = $1', [id]), await listOrderRecords(db)) }
 export async function createSupplierRecord(db, form = {}) { const supplier = normalizeSupplier({ ...form, id: nextSupplierId(await listSupplierRecords(db)) }); return insertSupplier(db, supplier) }
 export async function updateSupplierRecord(db, supplierId, patch = {}) { const current = await getSupplierRecord(db, supplierId); if (!current) return null; return replaceSupplier(db, normalizeSupplier(patch, current)) }
+export async function deleteSupplierRecord(db, supplierId) { const current = await getSupplierRecord(db, supplierId); if (!current) return false; await run(db, 'DELETE FROM suppliers WHERE id = $1', [supplierId]); return true }
 
 export async function openPostgresDatabase(connectionString = process.env.DATABASE_URL) {
   const pool = connectionString

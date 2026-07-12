@@ -20,7 +20,7 @@ export async function fetchOrdersApi(fetchImpl = fetch, view = '') {
 
 export async function createOrderApi(form, fetchImpl = fetch) {
   const body = await parseResponse(await fetchImpl('/api/orders', jsonRequest('POST', form)))
-  return body.order
+  return { order: body.order, emailNotification: body.emailNotification }
 }
 
 export async function updateOrderApi(orderId, patch, fetchImpl = fetch) {
@@ -65,6 +65,11 @@ export async function updateSettingsApi(patch, fetchImpl = fetch) {
   return body.settings || {}
 }
 
+export async function sendTestEmailApi(fetchImpl = fetch) {
+  const body = await parseResponse(await fetchImpl('/api/email/test', jsonRequest('POST', {})))
+  return body.emailNotification || {}
+}
+
 export async function archiveOrderApi(orderId, fetchImpl = fetch) {
   const body = await parseResponse(await fetchImpl(`/api/orders/${encodeURIComponent(orderId)}/archive`, jsonRequest('POST', {})))
   return body.order
@@ -98,6 +103,11 @@ export async function createSupplierApi(form, fetchImpl = fetch) {
 export async function updateSupplierApi(supplierId, patch, fetchImpl = fetch) {
   const body = await parseResponse(await fetchImpl(`/api/suppliers/${encodeURIComponent(supplierId)}`, jsonRequest('PATCH', patch)))
   return body.supplier
+}
+
+export async function deleteSupplierApi(supplierId, fetchImpl = fetch) {
+  await parseResponse(await fetchImpl(`/api/suppliers/${encodeURIComponent(supplierId)}`, jsonRequest('DELETE', {})))
+  return true
 }
 
 

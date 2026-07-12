@@ -2,6 +2,19 @@
 
 All notable SupplyDesk changes are documented here.
 
+## [1.4.26]
+
+### Added
+
+- Added the Suppliers module to the main navigation with supplier creation, read-only cards, explicit edit mode, and supplier deletion.
+- Added Mail Relay settings in Admin Settings, including email notification enablement, recipient configuration, test-email endpoint, and selectable email themes.
+- Added HTML RTL email notification templates for new purchase requests.
+
+### Changed
+
+- Completed bilingual Arabic/English wording for the new supplier and Mail Relay interfaces with formal labels and helper text.
+- Added success and warning notices for admin setting saves, supplier deletion, and email notification status.
+
 ## [1.4.25]
 
 ### Changed

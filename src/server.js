@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url'
 import { DatabaseSync } from 'node:sqlite'
 import * as sqliteData from './serverData.js'
 import * as pgData from './serverPgData.js'
+import { sendNewOrderEmail, sendTestEmail } from './emailNotifications.js'
 
 function dataLayerFor(db) {
   return db?.talabatiDialect === 'postgres' ? pgData : sqliteData
@@ -129,7 +130,7 @@ function serveStatic(request, response, staticDir) {
   createReadStream(filePath).pipe(response)
 }
 
-export function createTalabatiServer({ db, staticDir = defaultStaticDir } = {}) {
+export function createTalabatiServer({ db, staticDir = defaultStaticDir, emailSender = sendNewOrderEmail, testEmailSender = sendTestEmail } = {}) {
   if (!db) throw new Error('createTalabatiServer requires a database')
   const sessions = new Set()
 
@@ -190,6 +191,22 @@ export function createTalabatiServer({ db, staticDir = defaultStaticDir } = {}) 
         const { newPassword: _newPassword, ...settingsPatch } = body
         await dataLayerFor(db).updateAppSettingsRecord(db, settingsPatch)
         sendJson(response, 200, { settings: await dataLayerFor(db).publicSettingsRecord(db) })
+        return
+      }
+
+      if (requestUrl.pathname === '/api/email/test' && request.method === 'POST') {
+        const settings = await dataLayerFor(db).getAppSettingsRecord(db)
+        if (!String(settings.emailRecipient || '').trim()) {
+          sendJson(response, 400, { emailNotification: { skipped: true, reason: 'missing-recipient' }, error: 'Missing email recipient' })
+          return
+        }
+        try {
+          const emailNotification = await testEmailSender({ settings })
+          sendJson(response, 200, { emailNotification })
+        } catch (error) {
+          console.error('SupplyDesk test email failed:', error)
+          sendJson(response, 502, { emailNotification: { sent: false, error: 'email-failed' }, error: 'Email failed' })
+        }
         return
       }
 
@@ -258,7 +275,17 @@ export function createTalabatiServer({ db, staticDir = defaultStaticDir } = {}) 
       if (requestUrl.pathname === '/api/orders' && request.method === 'POST') {
         const body = await readJsonBody(request)
         const order = await dataLayerFor(db).createOrderRecord(db, body)
-        sendJson(response, 201, { order })
+        const settings = await dataLayerFor(db).getAppSettingsRecord(db)
+        let emailNotification = { skipped: true, reason: 'disabled' }
+        if (isTruthySetting(settings.emailNotificationsEnabled) && String(settings.emailRecipient || '').trim()) {
+          try {
+            emailNotification = await emailSender({ order, settings })
+          } catch (error) {
+            console.error('SupplyDesk email notification failed:', error)
+            emailNotification = { sent: false, error: 'email-failed' }
+          }
+        }
+        sendJson(response, 201, { order, emailNotification })
         return
       }
 
@@ -361,6 +388,17 @@ export function createTalabatiServer({ db, staticDir = defaultStaticDir } = {}) 
           return
         }
         sendJson(response, 200, { supplier })
+        return
+      }
+
+      if (supplierUpdateMatch && request.method === 'DELETE') {
+        const deleted = await dataLayerFor(db).deleteSupplierRecord(db, decodeURIComponent(supplierUpdateMatch[1]))
+        if (!deleted) {
+          sendError(response, 404, 'Supplier not found')
+          return
+        }
+        response.writeHead(204, { 'cache-control': 'no-store' })
+        response.end()
         return
       }
 

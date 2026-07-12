@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
   Archive,
+  Building2,
   Clock3,
   CreditCard,
   FileText,
@@ -29,6 +30,7 @@ import {
   deleteBudgetCategoryApi,
   createOrderApi,
   createSupplierApi,
+  deleteSupplierApi,
   deleteOrderForeverApi,
   deletePaymentApi,
   fetchAuthStatusApi,
@@ -47,10 +49,12 @@ import {
   updatePaymentApi,
   updateSettingsApi,
   updateSupplierApi,
+  sendTestEmailApi,
 } from './apiClient.js'
 
 const navItems = [
   { label: 'لوحة التحكم', icon: LayoutDashboard },
+  { label: 'الموردون', icon: Building2 },
   { label: 'بنود الميزانية', icon: ListChecks },
   { label: 'الأرشيف', icon: Archive },
   { label: 'المحذوفات', icon: Trash2 },
@@ -58,7 +62,15 @@ const navItems = [
 ]
 
 const paymentStatuses = ['لم تستحق', 'قيد الانتظار', 'مدفوعة', 'متأخرة']
-const appVersion = '1.4.24'
+const appVersion = '1.4.26'
+
+const emailThemeOptions = [
+  { id: 'talabati', name: 'ثيم البرنامج', hint: 'كريمي وذهبي مثل واجهة SupplyDesk', nameEn: 'App Theme', hintEn: 'Cream and gold like the SupplyDesk interface', colors: ['#efe7d8', '#7c5c2f', '#b58a4a'] },
+  { id: 'white', name: 'أبيض واضح', hint: 'أعلى تباين للشبكات أو عملاء البريد الصارمين', nameEn: 'Clear White', hintEn: 'Highest contrast for restrictive email clients or networks', colors: ['#ffffff', '#111827', '#d1d5db'] },
+  { id: 'black', name: 'أسود رسمي', hint: 'داكن احترافي للنصوص البيضاء الواضحة', nameEn: 'Formal Black', hintEn: 'Professional dark theme for clear white text', colors: ['#0f172a', '#f8fafc', '#334155'] },
+  { id: 'sapphire', name: 'أزرق إداري', hint: 'رسمي وبارد للمراسلات الإدارية', nameEn: 'Administrative Blue', hintEn: 'Formal cool styling for administrative messages', colors: ['#eaf2ff', '#0f4c81', '#2563eb'] },
+  { id: 'emerald', name: 'أخضر هادئ', hint: 'هادئ وواضح للمتابعة والاعتمادات', nameEn: 'Calm Green', hintEn: 'Calm and clear for follow-up and approvals', colors: ['#ecfdf5', '#065f46', '#10b981'] },
+]
 
 const englishUi = {
   'S': 'S',
@@ -269,6 +281,63 @@ const englishUi = {
   'ربط بطاقة الميزانية في لوحة التحكم بالسنة المختارة': 'Linked the dashboard budget card to the selected year',
   'تحسين شكل صفحة بنود الميزانية وتوضيح تعديل الميزانية وإضافة سنة جديدة': 'Improved the Budget Lines page and clarified budget editing and new-year creation',
 
+  'الموردين': 'Suppliers',
+  'دليل الموردين': 'Supplier Directory',
+  'سجل مرتب للموردين وبيانات التواصل قبل ربطهم بخطوة إنشاء الطلب.': 'A structured supplier directory with contact details before linking suppliers to purchase requests.',
+  'إجمالي الموردين': 'Total Suppliers',
+  'مورد محفوظ': 'Saved suppliers',
+  'طلبات مفتوحة': 'Open Requests',
+  'حسب اسم المورد في الطلبات': 'Based on supplier name in requests',
+  'موردين ممتازين': 'Excellent Suppliers',
+  'حسب التقييم الحالي': 'Based on current rating',
+  'لديهم إيميل': 'With Email',
+  'جاهزين للمراسلة لاحقًا': 'Ready for later correspondence',
+  'إضافة مورد جديد': 'Add New Supplier',
+  'أدخل بيانات التواصل الأساسية، والملاحظات اختيارية.': 'Enter the main contact details; notes are optional.',
+  'اسم المورد': 'Supplier Name',
+  'جهة الاتصال': 'Contact Person',
+  'رقم التواصل': 'Contact Number',
+  'التقييم': 'Rating',
+  'ملاحظات المورد': 'Supplier Notes',
+  'شروط الدفع، ملاحظات التعامل، أو أي نقطة مهمة': 'Payment terms, handling notes, or any important point',
+  'شروط دفع، جودة التعامل، سرعة التوريد...': 'Payment terms, service quality, delivery speed...',
+  '+ إضافة مورد': '+ Add Supplier',
+  'ما في موردين محفوظين حتى الآن.': 'No suppliers saved yet.',
+  'عرض طلبات هذا المورد': 'View this supplier requests',
+  'حفظ': 'Save',
+  'تعديل البيانات': 'Edit Details',
+  'حذف المورد': 'Delete Supplier',
+  'حذف المورد؟': 'Delete supplier?',
+  'لا يمكن مسح المورد إذا كنت تحتاج بياناته لاحقًا. الطلبات السابقة لن تُحذف.': 'Delete only the supplier record. Existing requests will not be deleted.',
+  'تعذر حذف المورد. حاول مرة أخرى.': 'Could not delete the supplier. Please try again.',
+  'تم حذف المورد.': 'Supplier deleted.',
+  'تم حفظ إعدادات المسؤول بنجاح.': 'Admin settings saved successfully.',
+  'إرسال إيميل عند إنشاء طلب جديد': 'Send email when a new request is created',
+  'إيميل مستلم الطلبات الجديدة': 'New request recipient email',
+  'يرسل البرنامج عبر Mail Relay الداخلي بدون يوزر أو باسورد.': 'The app sends through the internal Mail Relay without a username or password.',
+  'ثيم الإيميل': 'Email Theme',
+  'شكل رسالة Mail Relay': 'Mail Relay Message Style',
+  'اختر ثيم واضح حسب عميل البريد والشبكة المعزولة.': 'Choose a clear theme for the email client and isolated network.',
+  'اختبار إرسال بريد': 'Send Test Email',
+  'يحفظ الإيميل الحالي ثم يرسل رسالة اختبار للمستلم.': 'Saves the current email settings, then sends a test message to the recipient.',
+  'إذا كانت كلمة المرور مفعّلة، فإن إدخالها بشكل خاطئ 3 مرات يؤدي إلى قفل الدخول حسب المدة المحددة. تنبيهات الإيميل تستخدم Mail Relay الداخلي بعنوان مرسل مخفي من إعدادات السيرفر.': 'If password protection is enabled, three failed attempts lock sign-in for the configured duration. Email notifications use the internal Mail Relay with a sender address configured on the server.',
+  'اكتب إيميل مستلم الطلبات الجديدة قبل اختبار الإرسال.': 'Enter the new request recipient email before sending a test.',
+  'تم إرسال رسالة اختبار إلى': 'Test message sent to',
+  'لم يتم إرسال رسالة الاختبار. تأكد من إعدادات البريد.': 'The test message was not sent. Check the email settings.',
+  'فشل اختبار البريد. راجع Mail Relay والإيميل المكتوب.': 'Email test failed. Check the Mail Relay and recipient email.',
+  'تعذر إرسال رسالة الاختبار. راجع إعدادات Mail Relay أو الإيميل.': 'Could not send the test email. Check the Mail Relay settings or recipient email.',
+  'تم إنشاء الطلب، لكن تنبيه الإيميل لم يرسل. راجع Mail Relay.': 'Request created, but the email notification was not sent. Check the Mail Relay.',
+  'تم إنشاء الطلب وإرسال تنبيه الإيميل.': 'Request created and email notification sent.',
+  'ثيم البرنامج': 'App Theme',
+  'أبيض واضح': 'Clear White',
+  'أسود رسمي': 'Formal Black',
+  'أزرق إداري': 'Administrative Blue',
+  'أخضر هادئ': 'Calm Green',
+  'كريمي وذهبي مثل واجهة SupplyDesk': 'Cream and gold like the SupplyDesk interface',
+  'أعلى تباين للشبكات أو عملاء البريد الصارمين': 'Highest contrast for restrictive email clients or networks',
+  'داكن احترافي للنصوص البيضاء الواضحة': 'Professional dark theme for clear white text',
+  'رسمي وبارد للمراسلات الإدارية': 'Formal cool styling for administrative messages',
+  'هادئ وواضح للمتابعة والاعتمادات': 'Calm and clear for follow-up and approvals',
   'استكمال ترجمة تفاصيل الطلب وطلب جديد وسجل الإصدار للإنجليزية': 'Completed English translations for request details, new request, and version panel',
   'تحسين محاذاة الهيدر وكروت لوحة التحكم في الإنجليزية': 'Improved English header and dashboard card alignment',
   'إصلاح الرجوع للغة العربية بعد التبديل من الإنجليزية': 'Fixed returning to Arabic after switching from English',
@@ -660,22 +729,135 @@ function OrderRow({ order, mode = 'active', archiveYears = [], onOpenDetails, on
   )
 }
 
-function SupplierCard({ supplier, onFocusOrders, onUpdate }) {
+function SupplierCard({ supplier, onFocusOrders, onUpdate, onDelete, disabled }) {
+  const isEnglish = currentLanguage() === 'en'
+  const [isEditing, setIsEditing] = useState(false)
+  const [draft, setDraft] = useState(() => ({
+    name: supplier.name || '',
+    contact: supplier.contact || '',
+    phone: supplier.phone || '',
+    email: supplier.email || '',
+    rating: supplier.rating || 'جيد',
+    notes: supplier.notes || '',
+  }))
+
+  useEffect(() => {
+    if (isEditing) return
+    setDraft({
+      name: supplier.name || '',
+      contact: supplier.contact || '',
+      phone: supplier.phone || '',
+      email: supplier.email || '',
+      rating: supplier.rating || 'جيد',
+      notes: supplier.notes || '',
+    })
+  }, [supplier, isEditing])
+
+  const cancelEdit = () => {
+    setDraft({
+      name: supplier.name || '',
+      contact: supplier.contact || '',
+      phone: supplier.phone || '',
+      email: supplier.email || '',
+      rating: supplier.rating || 'جيد',
+      notes: supplier.notes || '',
+    })
+    setIsEditing(false)
+  }
+
+  const saveEdit = async () => {
+    const cleanDraft = { ...draft, name: draft.name.trim() || supplier.name }
+    try {
+      await onUpdate(supplier.id, cleanDraft)
+      setIsEditing(false)
+    } catch {
+      // The parent shows the save error banner; keep edit mode open so the user can fix the data.
+    }
+  }
+
   return (
     <article className="supplier-card supplier-editor">
-      <button className="supplier-avatar" type="button" onClick={() => onFocusOrders(supplier.name)}>{supplier.name.slice(0, 1)}</button>
-      <div className="supplier-fields">
-        <input value={supplier.name} onChange={(event) => onUpdate(supplier.id, { name: event.target.value })} aria-label="اسم المورد" />
-        <input value={supplier.contact} onChange={(event) => onUpdate(supplier.id, { contact: event.target.value })} aria-label="شخص التواصل" />
-        <input value={supplier.phone || ''} onChange={(event) => onUpdate(supplier.id, { phone: event.target.value })} placeholder="الهاتف" />
-        <input value={supplier.email || ''} onChange={(event) => onUpdate(supplier.id, { email: event.target.value })} placeholder="الإيميل" />
+      <button className="supplier-avatar" type="button" onClick={() => onFocusOrders(supplier)} title={isEnglish ? 'View this supplier requests' : 'عرض طلبات هذا المورد'}>{supplier.name.slice(0, 1)}</button>
+      <div className="supplier-main">
+        {isEditing ? (
+          <div className="supplier-fields">
+            <label className="supplier-name-field">{isEnglish ? 'Supplier Name' : 'اسم المورد'}<input value={draft.name} onChange={(event) => setDraft({ ...draft, name: event.target.value })} aria-label={isEnglish ? 'Supplier Name' : 'اسم المورد'} /></label>
+            <label>{isEnglish ? 'Contact Person' : 'جهة الاتصال'}<input value={draft.contact} onChange={(event) => setDraft({ ...draft, contact: event.target.value })} aria-label={isEnglish ? 'Contact Person' : 'جهة الاتصال'} placeholder={isEnglish ? 'Contact person or department' : 'اسم المسؤول أو القسم'} /></label>
+            <label>{isEnglish ? 'Contact Number' : 'رقم التواصل'}<input value={draft.phone} onChange={(event) => setDraft({ ...draft, phone: event.target.value })} placeholder="+974 ...." /></label>
+            <label>{isEnglish ? 'Email' : 'الإيميل'}<input type="email" value={draft.email} onChange={(event) => setDraft({ ...draft, email: event.target.value })} placeholder="supplier@company.com" /></label>
+            <label className="supplier-notes-field">{isEnglish ? 'Supplier Notes' : 'ملاحظات المورد'}<textarea value={draft.notes} onChange={(event) => setDraft({ ...draft, notes: event.target.value })} placeholder={isEnglish ? 'Payment terms, handling notes, or any important point' : 'شروط الدفع، ملاحظات التعامل، أو أي نقطة مهمة'} /></label>
+          </div>
+        ) : (
+          <div className="supplier-readonly">
+            <strong>{supplier.name}</strong>
+            <div><span>{isEnglish ? 'Contact Person' : 'جهة الاتصال'}</span><b>{supplier.contact || (isEnglish ? 'Not specified' : 'غير محدد')}</b></div>
+            <div><span>{isEnglish ? 'Contact Number' : 'رقم التواصل'}</span><b>{supplier.phone || (isEnglish ? 'Not specified' : 'غير محدد')}</b></div>
+            <div><span>{isEnglish ? 'Email' : 'الإيميل'}</span><b>{supplier.email || (isEnglish ? 'Not specified' : 'غير محدد')}</b></div>
+            {supplier.notes && <p>{supplier.notes}</p>}
+          </div>
+        )}
       </div>
       <div className="supplier-meta">
-        <select value={supplier.rating} onChange={(event) => onUpdate(supplier.id, { rating: event.target.value })}>
-          <option value="ممتاز">{t('ممتاز')}</option><option value="جيد">{t('جيد')}</option><option value="بطيء">{t('بطيء')}</option><option value="يحتاج متابعة">{t('يحتاج متابعة')}</option>
-        </select>
-        <b>{supplier.openOrders}</b>
+        <span>{isEnglish ? 'Rating' : 'التقييم'}</span>
+        {isEditing ? (
+          <select value={draft.rating} onChange={(event) => setDraft({ ...draft, rating: event.target.value })}>
+            <option>ممتاز</option><option>جيد</option><option>بطيء</option><option>يحتاج متابعة</option>
+          </select>
+        ) : <strong className="supplier-rating-view">{supplier.rating}</strong>}
+        <button className="supplier-orders-pill" type="button" onClick={() => onFocusOrders(supplier)}><b>{supplier.openOrders}</b><small>{isEnglish ? 'Open Requests' : 'طلبات مفتوحة'}</small></button>
+        {isEditing ? (
+          <div className="supplier-edit-actions">
+            <button className="primary-action" type="button" onClick={saveEdit} disabled={disabled}>{isEnglish ? 'Save' : 'حفظ'}</button>
+            <button className="ghost-action" type="button" onClick={cancelEdit} disabled={disabled}>{isEnglish ? 'Cancel' : 'إلغاء'}</button>
+          </div>
+        ) : (
+          <div className="supplier-edit-actions">
+            <button className="ghost-action" type="button" onClick={() => setIsEditing(true)} disabled={disabled}>{isEnglish ? 'Edit Details' : 'تعديل البيانات'}</button>
+            <button className="danger-action" type="button" onClick={() => onDelete(supplier)} disabled={disabled}>{isEnglish ? 'Delete Supplier' : 'حذف المورد'}</button>
+          </div>
+        )}
       </div>
+    </article>
+  )
+}
+
+function SuppliersPanel({ suppliers, supplierForm, setSupplierForm, onCreateSupplier, onUpdateSupplier, onDeleteSupplier, onFocusOrders, disabled }) {
+  const isEnglish = currentLanguage() === 'en'
+  const openOrders = suppliers.reduce((total, supplier) => total + Number(supplier.openOrders || 0), 0)
+  const suppliersWithEmail = suppliers.filter((supplier) => String(supplier.email || '').trim()).length
+  const excellentSuppliers = suppliers.filter((supplier) => supplier.rating === 'ممتاز').length
+  return (
+    <article className="panel suppliers-panel full-panel">
+      <div className="panel-header supplier-page-header">
+        <div>
+          <span>{isEnglish ? 'Supplier Directory' : 'دليل الموردين'}</span>
+          <h2>{isEnglish ? `Suppliers (${suppliers.length})` : `الموردين (${suppliers.length})`}</h2>
+        </div>
+        <p>{isEnglish ? 'A structured supplier directory with contact details before linking suppliers to purchase requests.' : 'سجل مرتب للموردين وبيانات التواصل قبل ربطهم بخطوة إنشاء الطلب.'}</p>
+      </div>
+      <div className="supplier-summary-grid">
+        <MetricCard icon={Building2} label={isEnglish ? 'Total Suppliers' : 'إجمالي الموردين'} value={suppliers.length} hint={isEnglish ? 'Saved suppliers' : 'مورد محفوظ'} />
+        <MetricCard icon={FileText} label={isEnglish ? 'Open Requests' : 'طلبات مفتوحة'} value={openOrders} hint={isEnglish ? 'Based on supplier name in requests' : 'حسب اسم المورد في الطلبات'} tone="warning" />
+        <MetricCard icon={CreditCard} label={isEnglish ? 'Excellent Suppliers' : 'موردين ممتازين'} value={excellentSuppliers} hint={isEnglish ? 'Based on current rating' : 'حسب التقييم الحالي'} tone="success" />
+        <MetricCard icon={Clock3} label={isEnglish ? 'With Email' : 'لديهم إيميل'} value={suppliersWithEmail} hint={isEnglish ? 'Ready for later correspondence' : 'جاهزين للمراسلة لاحقًا'} tone="info" />
+      </div>
+      <form className="supplier-create-form" onSubmit={onCreateSupplier}>
+        <div className="supplier-form-title">
+          <strong>{isEnglish ? 'Add New Supplier' : 'إضافة مورد جديد'}</strong>
+          <span>{isEnglish ? 'Enter the main contact details; notes are optional.' : 'أدخل بيانات التواصل الأساسية، والملاحظات اختيارية.'}</span>
+        </div>
+        <label>{isEnglish ? 'Supplier Name' : 'اسم المورد'}<input placeholder={isEnglish ? 'Example: Qatar Facilities' : 'مثال: Qatar Facilities'} required value={supplierForm.name} onChange={(event) => setSupplierForm({ ...supplierForm, name: event.target.value })} /></label>
+        <label>{isEnglish ? 'Contact Person' : 'جهة الاتصال'}<input placeholder={isEnglish ? 'Contact person or department' : 'اسم المسؤول أو القسم'} value={supplierForm.contact} onChange={(event) => setSupplierForm({ ...supplierForm, contact: event.target.value })} /></label>
+        <label>{isEnglish ? 'Contact Number' : 'رقم التواصل'}<input placeholder="+974 ...." value={supplierForm.phone} onChange={(event) => setSupplierForm({ ...supplierForm, phone: event.target.value })} /></label>
+        <label>{isEnglish ? 'Email' : 'الإيميل'}<input type="email" placeholder="supplier@company.com" value={supplierForm.email} onChange={(event) => setSupplierForm({ ...supplierForm, email: event.target.value })} /></label>
+        <label>{isEnglish ? 'Rating' : 'التقييم'}<select value={supplierForm.rating} onChange={(event) => setSupplierForm({ ...supplierForm, rating: event.target.value })}><option>ممتاز</option><option>جيد</option><option>بطيء</option><option>يحتاج متابعة</option></select></label>
+        <label className="wide">{isEnglish ? 'Notes' : 'ملاحظات'}<textarea placeholder={isEnglish ? 'Payment terms, service quality, delivery speed...' : 'شروط دفع، جودة التعامل، سرعة التوريد...'} value={supplierForm.notes} onChange={(event) => setSupplierForm({ ...supplierForm, notes: event.target.value })} /></label>
+        <button className="primary-action" type="submit" disabled={disabled}>{isEnglish ? '+ Add Supplier' : '+ إضافة مورد'}</button>
+      </form>
+      <div className="supplier-list full-list">
+        {suppliers.map((supplier) => <SupplierCard key={supplier.id || supplier.name} supplier={supplier} onFocusOrders={onFocusOrders} onUpdate={onUpdateSupplier} onDelete={onDeleteSupplier} disabled={disabled} />)}
+      </div>
+      {suppliers.length === 0 && <div className="empty-state">{isEnglish ? 'No suppliers saved yet.' : 'ما في موردين محفوظين حتى الآن.'}</div>}
     </article>
   )
 }
@@ -893,7 +1075,7 @@ function OrderFormModal({ mode, form, setForm, budgetYears = [], budgetCategorie
         </div>
 
         <div className="modal-footer">
-          <button className="ghost-action" type="button" onClick={onClose}>إلغاء</button>
+          <button className="ghost-action" type="button" onClick={onClose}>{isEnglish ? 'Cancel' : 'إلغاء'}</button>
           <button className="primary-action" type="submit">حفظ الطلب</button>
         </div>
       </form>
@@ -1112,7 +1294,7 @@ function LoginGate({ loginPassword, setLoginPassword, onLogin, authStatus, login
   )
 }
 
-function AdminSettingsPanel({ settingsDraft, setSettingsDraft, onSave, onLogout, disabled }) {
+function AdminSettingsPanel({ settingsDraft, setSettingsDraft, onSave, onTestEmail, onLogout, disabled, notice }) {
   return (
     <article className="panel admin-settings-panel full-panel">
       <div className="panel-header"><div><span>الحماية</span><h2>إعدادات المسؤول</h2></div></div>
@@ -1123,20 +1305,50 @@ function AdminSettingsPanel({ settingsDraft, setSettingsDraft, onSave, onLogout,
         </label>
         <label>كلمة مرور جديدة<input type="password" value={settingsDraft.newPassword} onChange={(event) => setSettingsDraft({ ...settingsDraft, newPassword: event.target.value })} placeholder="اتركها فارغة إذا لم ترغب في تغييرها" /><small>{settingsDraft.passwordSet ? 'يوجد كلمة مرور محفوظة حاليًا.' : 'لا توجد كلمة مرور محفوظة؛ ضع كلمة قبل التفعيل.'}</small></label>
         <label>مدة القفل بالدقائق<input inputMode="numeric" value={settingsDraft.lockDurationMinutes} onChange={(event) => setSettingsDraft({ ...settingsDraft, lockDurationMinutes: event.target.value })} /></label>
-        <label>العملة
-          <select value={settingsDraft.currencyCode || 'QAR'} onChange={(event) => {
-            const selectedCurrency = currencyFromCode(event.target.value)
-            setSettingsDraft({ ...settingsDraft, currencyCode: selectedCurrency.code, currencySymbol: selectedCurrency.symbol })
-          }}>
-            {currencyOptions.map((currency) => <option key={currency.code} value={currency.code}>{currentLanguage() === 'en' ? currency.labelEn : currency.labelAr}</option>)}
-          </select>
+        <label>العملة<select value={settingsDraft.currencyCode || 'QAR'} onChange={(event) => {
+          const currency = currencyFromCode(event.target.value)
+          setSettingsDraft({ ...settingsDraft, currencyCode: currency.code, currencySymbol: currency.symbol })
+        }}>
+          {currencyOptions.map((currency) => <option key={currency.code} value={currency.code}>{currentLanguage() === 'en' ? currency.labelEn : currency.labelAr}</option>)}
+        </select>
           <small>{currentLanguage() === 'en' ? 'Choose the currency shown next to amounts across the dashboard, requests, and budget lines.' : 'اختر العملة التي تظهر بجانب كل المبالغ في لوحة التحكم والطلبات وبنود الميزانية.'}</small>
         </label>
+        <label className="toggle-row">
+          <span>إرسال إيميل عند إنشاء طلب جديد</span>
+          <input type="checkbox" checked={settingsDraft.emailNotificationsEnabled} onChange={(event) => setSettingsDraft({ ...settingsDraft, emailNotificationsEnabled: event.target.checked })} />
+        </label>
+        <label className="email-recipient-field">إيميل مستلم الطلبات الجديدة<input type="email" value={settingsDraft.emailRecipient} onChange={(event) => setSettingsDraft({ ...settingsDraft, emailRecipient: event.target.value })} placeholder="procurement@company.local" /><small>يرسل البرنامج عبر Mail Relay الداخلي بدون يوزر أو باسورد.</small></label>
+        <section className="email-theme-picker" aria-label="ثيم الإيميل">
+          <div className="email-theme-heading">
+            <div>
+              <span>ثيم الإيميل</span>
+              <strong>شكل رسالة Mail Relay</strong>
+            </div>
+            <small>اختر ثيم واضح حسب عميل البريد والشبكة المعزولة.</small>
+          </div>
+          <div className="email-theme-options">
+            {emailThemeOptions.map((option) => (
+              <label className={`email-theme-card ${settingsDraft.emailTheme === option.id ? 'active' : ''}`} key={option.id}>
+                <input type="radio" name="emailTheme" value={option.id} checked={settingsDraft.emailTheme === option.id} onChange={(event) => setSettingsDraft({ ...settingsDraft, emailTheme: event.target.value })} />
+                <span className="email-theme-swatches" aria-hidden="true">
+                  {option.colors.map((color) => <i key={color} style={{ background: color }} />)}
+                </span>
+                <b>{currentLanguage() === 'en' ? option.nameEn : option.name}</b>
+                <small>{currentLanguage() === 'en' ? option.hintEn : option.hint}</small>
+              </label>
+            ))}
+          </div>
+        </section>
+        <div className="email-test-actions">
+          <button className="ghost-action" type="button" onClick={onTestEmail} disabled={disabled || !settingsDraft.emailRecipient.trim()}>اختبار إرسال بريد</button>
+          <small>يحفظ الإيميل الحالي ثم يرسل رسالة اختبار للمستلم.</small>
+        </div>
+        {notice && <div className={`admin-inline-message ${notice.type || 'success'}`}>{notice.message}</div>}
         <div className="admin-actions">
           <button className="primary-action" type="button" onClick={onSave} disabled={disabled}>حفظ إعدادات المسؤول</button>
           <button className="ghost-action" type="button" onClick={onLogout}>تسجيل الخروج</button>
         </div>
-        <p className="admin-help">إذا كانت كلمة المرور مفعّلة، فإن إدخالها بشكل خاطئ 3 مرات يؤدي إلى قفل الدخول حسب المدة المحددة. عند إيقافها يفتح البرنامج دون تسجيل دخول.</p>
+        <p className="admin-help">إذا كانت كلمة المرور مفعّلة، فإن إدخالها بشكل خاطئ 3 مرات يؤدي إلى قفل الدخول حسب المدة المحددة. تنبيهات الإيميل تستخدم Mail Relay الداخلي بعنوان مرسل مخفي من إعدادات السيرفر.</p>
       </div>
     </article>
   )
@@ -1199,13 +1411,14 @@ export default function App() {
   const [authStatus, setAuthStatus] = useState({ authEnabled: false, authenticated: true, lockDurationMinutes: 60, lockedUntil: '' })
   const [loginPassword, setLoginPassword] = useState('')
   const [loginError, setLoginError] = useState('')
-  const [adminSettingsDraft, setAdminSettingsDraft] = useState({ authEnabled: false, lockDurationMinutes: '60', newPassword: '', passwordSet: false, currencyCode: 'QAR', currencySymbol: 'ر.ق' })
+  const [adminSettingsDraft, setAdminSettingsDraft] = useState({ authEnabled: false, lockDurationMinutes: '60', newPassword: '', passwordSet: false, currencyCode: 'QAR', currencySymbol: 'ر.ق', emailNotificationsEnabled: false, emailRecipient: '', emailTheme: 'talabati' })
   const [isEditingHeroTitle, setIsEditingHeroTitle] = useState(false)
   const [isVersionOpen, setIsVersionOpen] = useState(false)
   const [supplierForm, setSupplierForm] = useState(emptySupplierForm)
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [apiError, setApiError] = useState('')
+  const [uiNotice, setUiNotice] = useState(null)
   const [hiddenSuggestions, setHiddenSuggestions] = useState(emptyHiddenSuggestions)
 
   const refreshData = async () => {
@@ -1240,6 +1453,9 @@ export default function App() {
       passwordSet: Boolean(settings.passwordSet),
       currencyCode: settings.currencyCode || 'QAR',
       currencySymbol: settings.currencySymbol || 'ر.ق',
+      emailNotificationsEnabled: String(settings.emailNotificationsEnabled).toLowerCase() === 'true',
+      emailRecipient: settings.emailRecipient || '',
+      emailTheme: settings.emailTheme || 'talabati',
     })
   }
 
@@ -1258,6 +1474,14 @@ export default function App() {
       .finally(() => { if (!cancelled) setIsLoading(false) })
     return () => { cancelled = true }
   }, [])
+
+  useEffect(() => {
+    if (!uiNotice) return undefined
+    const timeout = setTimeout(() => setUiNotice(null), 4500)
+    return () => clearTimeout(timeout)
+  }, [uiNotice])
+
+  const showNotice = (message, type = 'success') => setUiNotice({ message, type, id: Date.now() })
 
   const visibleOrders = useMemo(() => filterOrders(orderList, { section: activeSection, quickFilter, query }), [orderList, activeSection, quickFilter, query])
   const visibleArchived = useMemo(() => filterOrders(archivedOrders, { section: 'الطلبات', quickFilter: 'الكل', query }), [archivedOrders, query])
@@ -1381,10 +1605,13 @@ export default function App() {
         await refreshBudgetData()
       }
       else {
-        const savedOrder = await createOrderApi(form)
+        const createResult = await createOrderApi(form)
+        const savedOrder = createResult.order || createResult
         setOrderList((current) => [savedOrder, ...current])
         await revealSavedOrderSuggestions(savedOrder)
         await refreshBudgetData()
+        if (createResult.emailNotification?.sent) showNotice('تم إنشاء الطلب وإرسال تنبيه الإيميل.', 'success')
+        else if (createResult.emailNotification?.error) showNotice('تم إنشاء الطلب، لكن تنبيه الإيميل لم يرسل. راجع Mail Relay.', 'warning')
       }
       setModalMode(null); setEditingId(null); setForm(emptyForm)
     }, 'تعذر حفظ الطلب. حاول مرة أخرى.')
@@ -1496,29 +1723,67 @@ export default function App() {
     }, 'تعذر مسح بند الميزانية. إذا كان مرتبطًا بطلبات، انقل الطلبات إلى بند آخر أولًا.')
   }
 
-  const handleSaveAdminSettings = async () => withSaving(async () => {
+  const buildAdminSettingsPayload = () => {
     const payload = {
       authEnabled: String(Boolean(adminSettingsDraft.authEnabled)),
       lockDurationMinutes: String(Math.max(1, Number(adminSettingsDraft.lockDurationMinutes) || 60)),
       currencyCode: currencyFromCode(adminSettingsDraft.currencyCode).code,
       currencySymbol: currencyFromCode(adminSettingsDraft.currencyCode).symbol,
+      emailNotificationsEnabled: String(Boolean(adminSettingsDraft.emailNotificationsEnabled)),
+      emailRecipient: adminSettingsDraft.emailRecipient.trim(),
+      emailTheme: emailThemeOptions.some((option) => option.id === adminSettingsDraft.emailTheme) ? adminSettingsDraft.emailTheme : 'talabati',
     }
     if (adminSettingsDraft.authEnabled && !adminSettingsDraft.passwordSet && !adminSettingsDraft.newPassword.trim()) {
       throw new Error('Password required before enabling auth')
     }
     if (adminSettingsDraft.newPassword.trim()) payload.newPassword = adminSettingsDraft.newPassword.trim()
-    const settings = await updateSettingsApi(payload)
+    return payload
+  }
+
+  const applyAdminSettingsResponse = (settings, fallbackPayload) => {
     setAdminSettingsDraft({
       authEnabled: String(settings.authEnabled).toLowerCase() === 'true',
-      lockDurationMinutes: settings.lockDurationMinutes || payload.lockDurationMinutes,
+      lockDurationMinutes: settings.lockDurationMinutes || fallbackPayload.lockDurationMinutes,
       newPassword: '',
       passwordSet: Boolean(settings.passwordSet),
-      currencyCode: settings.currencyCode || payload.currencyCode,
-      currencySymbol: settings.currencySymbol || currencyFromCode(settings.currencyCode || payload.currencyCode).symbol,
+      currencyCode: settings.currencyCode || fallbackPayload.currencyCode,
+      currencySymbol: settings.currencySymbol || currencyFromCode(settings.currencyCode || fallbackPayload.currencyCode).symbol,
+      emailNotificationsEnabled: String(settings.emailNotificationsEnabled).toLowerCase() === 'true',
+      emailRecipient: settings.emailRecipient || '',
+      emailTheme: settings.emailTheme || 'talabati',
     })
+  }
+
+  const handleSaveAdminSettings = async () => withSaving(async () => {
+    const payload = buildAdminSettingsPayload()
+    const settings = await updateSettingsApi(payload)
+    applyAdminSettingsResponse(settings, payload)
     const status = await fetchAuthStatusApi()
     setAuthStatus(status)
+    showNotice('تم حفظ إعدادات المسؤول بنجاح.', 'success')
   }, 'تعذر حفظ إعدادات المسؤول. حاول مرة أخرى.')
+
+  const handleTestAdminEmail = async () => {
+    if (!adminSettingsDraft.emailRecipient.trim()) {
+      showNotice('اكتب إيميل مستلم الطلبات الجديدة قبل اختبار الإرسال.', 'warning')
+      return
+    }
+    setIsSaving(true)
+    setApiError('')
+    try {
+      const payload = buildAdminSettingsPayload()
+      const settings = await updateSettingsApi(payload)
+      applyAdminSettingsResponse(settings, payload)
+      const result = await sendTestEmailApi()
+      if (result.sent) showNotice(`تم إرسال رسالة اختبار إلى ${result.to}.`, 'success')
+      else showNotice('لم يتم إرسال رسالة الاختبار. تأكد من إعدادات البريد.', 'warning')
+    } catch {
+      showNotice('فشل اختبار البريد. راجع Mail Relay والإيميل المكتوب.', 'warning')
+      setApiError('تعذر إرسال رسالة الاختبار. راجع إعدادات Mail Relay أو الإيميل.')
+    } finally {
+      setIsSaving(false)
+    }
+  }
 
 
   const handleArchive = async (orderId) => withSaving(async () => {
@@ -1583,28 +1848,25 @@ export default function App() {
     }, 'تعذر إضافة المورد. تأكد أن الاسم غير مكرر.')
   }
 
-  const selectSupplier = (supplierName) => { setActiveSection('الطلبات'); setQuickFilter('الكل'); setQuery(supplierName) }
+  const handleDeleteSupplier = async (supplier) => {
+    if (!supplier?.id) return
+    if (!confirm(`حذف المورد؟\n\n${supplier.name}\n\nلا يمكن مسح المورد إذا كنت تحتاج بياناته لاحقًا. الطلبات السابقة لن تُحذف.`)) return
+    await withSaving(async () => {
+      await deleteSupplierApi(supplier.id)
+      setSupplierList((current) => current.filter((item) => item.id !== supplier.id))
+      showNotice('تم حذف المورد.', 'success')
+    }, 'تعذر حذف المورد. حاول مرة أخرى.')
+  }
+
+  const selectSupplier = (supplier) => { const supplierName = typeof supplier === 'string' ? supplier : supplier?.name; setActiveSection('الطلبات'); setQuickFilter('الكل'); setQuery(supplierName || '') }
   const handlers = { onOpenDetails: openDetails, onArchive: handleArchive, onTrash: handleTrash, onRestore: handleRestore, onDeleteForever: handleDeleteForever, onArchiveYearChange: handleArchiveYearChange }
 
   const renderMainPanel = () => {
     if (activeSection === 'الموردون') {
-      return (
-        <article className="panel suppliers-panel full-panel">
-          <div className="panel-header"><div><span>إدارة الموردين</span><h2>الموردون ({supplierList.length})</h2></div></div>
-          <form className="supplier-create-form" onSubmit={handleCreateSupplier}>
-            <input placeholder="اسم المورد" required value={supplierForm.name} onChange={(event) => setSupplierForm({ ...supplierForm, name: event.target.value })} />
-            <input placeholder="شخص التواصل" value={supplierForm.contact} onChange={(event) => setSupplierForm({ ...supplierForm, contact: event.target.value })} />
-            <input placeholder="الهاتف" value={supplierForm.phone} onChange={(event) => setSupplierForm({ ...supplierForm, phone: event.target.value })} />
-            <input placeholder="الإيميل" value={supplierForm.email} onChange={(event) => setSupplierForm({ ...supplierForm, email: event.target.value })} />
-            <select value={supplierForm.rating} onChange={(event) => setSupplierForm({ ...supplierForm, rating: event.target.value })}><option value="ممتاز">{t('ممتاز')}</option><option value="جيد">{t('جيد')}</option><option value="بطيء">{t('بطيء')}</option><option value="يحتاج متابعة">{t('يحتاج متابعة')}</option></select>
-            <button className="primary-action" type="submit" disabled={isSaving}>+ مورد</button>
-          </form>
-          <div className="supplier-list full-list">{supplierList.map((supplier) => <SupplierCard key={supplier.id || supplier.name} supplier={supplier} onFocusOrders={selectSupplier} onUpdate={handleUpdateSupplier} />)}</div>
-        </article>
-      )
+      return <SuppliersPanel suppliers={supplierList} supplierForm={supplierForm} setSupplierForm={setSupplierForm} onCreateSupplier={handleCreateSupplier} onUpdateSupplier={handleUpdateSupplier} onDeleteSupplier={handleDeleteSupplier} onFocusOrders={selectSupplier} disabled={isSaving} />
     }
     if (activeSection === 'بنود الميزانية') return <BudgetCategoriesPanel years={budgetYears} categories={budgetCategories} formatMoney={formatMoney} selectedYear={selectedBudgetYear} setSelectedYear={(year) => { setSelectedBudgetYear(year); const found = budgetYears.find((item) => item.year === year); if (found) setBudgetYearDraft({ ...budgetYearDraft, year: String(Number(found.year) + 1), budget: formatMoneyInput(found.budget || ''), notes: found.notes || '' }) }} yearDraft={budgetYearDraft} setYearDraft={setBudgetYearDraft} categoryForm={budgetCategoryForm} setCategoryForm={setBudgetCategoryForm} onCreateYear={handleCreateBudgetYear} onUpdateYear={handleUpdateBudgetYear} onCreateCategory={handleCreateBudgetCategory} onUpdateCategory={handleUpdateBudgetCategory} onDeleteCategory={handleDeleteBudgetCategory} disabled={isSaving} />
-    if (activeSection === 'إعدادات المسؤول') return <AdminSettingsPanel settingsDraft={adminSettingsDraft} setSettingsDraft={setAdminSettingsDraft} onSave={handleSaveAdminSettings} onLogout={handleLogout} disabled={isSaving} />
+    if (activeSection === 'إعدادات المسؤول') return <AdminSettingsPanel settingsDraft={adminSettingsDraft} setSettingsDraft={setAdminSettingsDraft} onSave={handleSaveAdminSettings} onTestEmail={handleTestAdminEmail} onLogout={handleLogout} disabled={isSaving} notice={uiNotice} />
     if (activeSection === 'الأرشيف') return <ArchivePanel orders={visibleArchived} archiveYears={archiveYears} archiveYearFilter={archiveYearFilter} setArchiveYearFilter={setArchiveYearFilter} handlers={handlers} formatMoney={formatMoney} />
     if (activeSection === 'المحذوفات') return <OrdersPanel title="سلة المحذوفات - يمكن الاسترجاع خلال 30 يوم" orders={visibleDeleted} mode="trash" quickFilter={quickFilter} setQuickFilter={setQuickFilter} handlers={handlers} formatMoney={formatMoney} />
     return <OrdersPanel title={activeSection === 'الدفعات' ? 'طلبات الدفعات' : 'طلبات المشتريات'} orders={visibleOrders} mode="active" quickFilter={quickFilter} setQuickFilter={setQuickFilter} handlers={handlers} formatMoney={formatMoney} />
@@ -1622,7 +1884,7 @@ export default function App() {
     const root = document.getElementById('root')
     if (root) observer.observe(root, { childList: true, subtree: true })
     return () => observer.disconnect()
-  }, [language, orderList, archivedOrders, deletedOrders, budgetYears, budgetCategories, activeSection, selectedOrderId, modalMode, isVersionOpen, apiError, isLoading, isSaving])
+  }, [language, orderList, archivedOrders, deletedOrders, budgetYears, budgetCategories, activeSection, selectedOrderId, modalMode, isVersionOpen, apiError, isLoading, isSaving, uiNotice])
 
   if (!isLoading && authStatus.authEnabled && !authStatus.authenticated) {
     return <LoginGate loginPassword={loginPassword} setLoginPassword={setLoginPassword} onLogin={handleLogin} authStatus={authStatus} loginError={loginError} isSaving={isSaving} language={language} setLanguage={setLanguage} />
@@ -1642,8 +1904,8 @@ export default function App() {
           </div>
         </header>
 
-        {(apiError || isLoading || isSaving) && (
-          <div className={`sync-banner ${apiError ? 'error' : ''}`}>{apiError || (isLoading ? 'جاري تحميل بيانات الطلبات...' : 'جاري حفظ البيانات...')}</div>
+        {(apiError || isLoading || isSaving || uiNotice) && (
+          <div className={`sync-banner ${apiError ? 'error' : uiNotice?.type || ''}`}>{apiError || uiNotice?.message || (isLoading ? 'جاري تحميل بيانات الطلبات...' : 'جاري حفظ البيانات...')}</div>
         )}
 
         <section className="executive-hero compact-hero">
@@ -1653,7 +1915,7 @@ export default function App() {
                 <textarea value={heroTitleDraft} onChange={(event) => setHeroTitleDraft(event.target.value)} />
                 <div className="hero-title-actions">
                   <button className="primary-action" type="button" onClick={handleSaveHeroTitle}>حفظ العنوان</button>
-                  <button className="ghost-action" type="button" onClick={() => { setHeroTitleDraft(heroTitle); setIsEditingHeroTitle(false) }}>إلغاء</button>
+                  <button className="ghost-action" type="button" onClick={() => { setHeroTitleDraft(heroTitle); setIsEditingHeroTitle(false) }}>{isEnglish ? 'Cancel' : 'إلغاء'}</button>
                 </div>
               </>
             ) : (
